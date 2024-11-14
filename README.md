@@ -704,11 +704,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 # 6. 개발 문화
 ### [📏 팀 그라운드 룰](https://www.notion.so/13e7e96b7e498104925cf9e3ef479c68)
 ### [💬 커밋 컨벤션](https://www.notion.so/13e7e96b7e4981729498fe6fbd8d2bf8)
-### 📷 팀 미팅
-<img width="1264" alt="image" src="https://github.com/user-attachments/assets/206e58e3-e9a9-457e-aba0-4ff09f1efec8">
-<img width="1264" alt="image" src="https://github.com/user-attachments/assets/7a75f24f-3032-438e-9e4f-68f141c0faf5">
-<img width="1282" alt="image" src="https://github.com/user-attachments/assets/e7d2c2a7-7fde-4f67-a38a-b3fb75782189">
-
 ### [🚨 회의록](https://www.notion.so/13e7e96b7e4981ea9ce8d6e2c5e9f513)
 
 <br />
