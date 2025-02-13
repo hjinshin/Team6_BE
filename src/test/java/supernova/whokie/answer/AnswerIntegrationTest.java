@@ -31,6 +31,7 @@ import supernova.whokie.user.Users;
 import supernova.whokie.user.infrastructure.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -231,7 +232,7 @@ class AnswerIntegrationTest {
     @Test
     @DisplayName("해당 월에 질문이 있는 날짜 반환 테스트")
     void getAnswerRecordDaysTest() throws Exception {
-        LocalDate date = LocalDate.of(2024, 11, 1); // 해당 월 전체 조회
+        LocalDate date = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
         int todayDay = LocalDate.now().getDayOfMonth();
 
         mockMvc.perform(get("/api/answer/record/days")
