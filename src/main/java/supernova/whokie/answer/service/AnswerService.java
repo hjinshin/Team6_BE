@@ -21,7 +21,6 @@ import supernova.whokie.pointrecord.PointRecordOption;
 import supernova.whokie.pointrecord.constants.PointConstants;
 import supernova.whokie.pointrecord.event.PointRecordEventDto;
 import supernova.whokie.question.Question;
-import supernova.whokie.question.service.QuestionReaderService;
 import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.s3.service.S3Service;
 import supernova.whokie.user.Users;
@@ -41,7 +40,6 @@ public class AnswerService {
     private final ApplicationEventPublisher eventPublisher;
     private final UserReaderService userReaderService;
     private final AnswerReaderService answerReaderService;
-    private final QuestionReaderService questionReaderService;
     private final GroupReaderService groupReaderService;
     private final AnswerWriterService answerWriterService;
     private final FriendReaderService friendReaderService;
@@ -78,24 +76,6 @@ public class AnswerService {
         List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(user, startDate, endDate);
 
         return AnswerModel.RecordDays.from(answerRecordDays);
-    }
-
-
-    @Transactional
-    public void answerToCommonQuestion(Long userId, AnswerCommand.CommonAnswer command) {
-        Question question = questionReaderService.getQuestionById(command.questionId());
-
-        answerToQuestion(userId, command.pickedId(), question);
-    }
-
-    @Transactional
-    public void answerToGroupQuestion(Long userId, AnswerCommand.Group command) {
-        Question question = questionReaderService.getQuestionById(command.questionId());
-        if(question.isNotCorrectGroupQuestion(command.groupId())) {
-            throw new InvalidEntityException(MessageConstants.GROUP_NOT_FOUND_MESSAGE);
-        }
-
-        answerToQuestion(userId, command.pickedId(), question);
     }
 
     @Transactional(readOnly = true)
@@ -155,7 +135,8 @@ public class AnswerService {
         return allHints;
     }
 
-    private void answerToQuestion(Long userId, Long pickedId, Question question) {
+    @Transactional
+    public void answerToQuestion(Long userId, Long pickedId, Question question) {
         Users user = userReaderService.getUserById(userId);
         Users picked = userReaderService.getUserById(pickedId);
         Groups group = groupReaderService.getGroupById(question.getGroupId());

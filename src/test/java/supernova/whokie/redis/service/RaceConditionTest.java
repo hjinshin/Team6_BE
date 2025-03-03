@@ -14,11 +14,15 @@ import org.springframework.test.context.TestPropertySource;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import supernova.config.EmbeddedRedisConfig;
+import supernova.whokie.answer.service.AnswerRedissonService;
+import supernova.whokie.answer.service.dto.AnswerCommand;
 import supernova.whokie.group.Groups;
 import supernova.whokie.group.infrastructure.repository.GroupRepository;
+import supernova.whokie.question.Question;
+import supernova.whokie.question.QuestionStatus;
+import supernova.whokie.question.infrastructure.repository.QuestionRepository;
 import supernova.whokie.ranking.Ranking;
 import supernova.whokie.ranking.infrastructure.repoistory.RankingRepository;
-import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.redis.entity.RedisVisitCount;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitCountRepository;
 import supernova.whokie.user.Gender;
@@ -51,10 +55,10 @@ public class RaceConditionTest {
     private RedisVisitService redisVisitService;
 
     @Autowired
-    private RankingWriterService rankingWriterService;
+    private QuestionRepository questionRepository;
 
     @Autowired
-    RankingRepository rankingRepository;
+    private AnswerRedissonService answerRedissonService;
 
     @Autowired
     private UserRepository userRepository;
@@ -63,16 +67,21 @@ public class RaceConditionTest {
     private GroupRepository groupRepository;
 
     @Autowired
+    private RankingRepository rankingRepository;
+
+    @Autowired
     private RedissonClient redissonClient;
 
     Users user;
     Groups group;
+    Question question;
 
     @BeforeEach
     void setUp() {
         redissonClient.getKeys().flushall();
         user = createUser();
         group = createGroup();
+        question = createQuestion(user, group);
     }
 
     @Test
@@ -115,10 +124,10 @@ public class RaceConditionTest {
     }
 
     @Test
-    @DisplayName("동시 질문 지목 횟수 증가 테스트")
+    @DisplayName("동시 응답 RedissonLock 테스트")
     void AnswerCountConcurrentlyTest() throws InterruptedException {
         // given
-        createRanking(user, group);
+        AnswerCommand.CommonAnswer command = AnswerCommand.CommonAnswer.builder().questionId(question.getId()).pickedId(user.getId()).build();
         int threadCount = 100; // 스레드 개수
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
@@ -127,7 +136,7 @@ public class RaceConditionTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(user, "test", group);
+                    answerRedissonService.answerToCommonQuestion(user.getId(), command);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -139,7 +148,7 @@ public class RaceConditionTest {
         executorService.shutdown();
 
         // then
-        Ranking actual = rankingRepository.findByUsersAndQuestionAndGroups(user, "test", group)
+        Ranking actual = rankingRepository.findByUsersAndQuestionAndGroups(user, question.getContent(), group)
             .orElseThrow();
 
         assertAll(
@@ -183,15 +192,15 @@ public class RaceConditionTest {
         return group;
     }
 
-    private void createRanking(Users user, Groups group) {
-        Ranking ranking = Ranking.builder()
-            .question("test")
-            .count(0)
-            .users(user)
-            .groups(group)
-            .build();
-
-        rankingRepository.save(ranking);
+    private Question createQuestion(Users user, Groups group) {
+        Question question = Question.builder()
+                .content("question1")
+                .questionStatus(QuestionStatus.APPROVED)
+                .groupId(group.getId())
+                .writer(user)
+                .build();
+        questionRepository.save(question);
+        return question;
     }
 }
 
