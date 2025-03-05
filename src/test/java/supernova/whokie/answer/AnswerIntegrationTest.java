@@ -4,11 +4,11 @@ import io.awspring.cloud.s3.S3Template;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -16,6 +16,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import supernova.config.EmbeddedRedisConfig;
 import supernova.whokie.answer.constants.AnswerConstants;
 import supernova.whokie.answer.infrastructure.repository.AnswerRepository;
 import supernova.whokie.friend.Friend;
@@ -46,7 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "url.secret-key=abcd",
         "spring.sql.init.mode=never"
 })
-@MockBean({S3Client.class, S3Template.class, S3Presigner.class, RedissonClient.class})
+@MockBean({S3Client.class, S3Template.class, S3Presigner.class})
+@Import(EmbeddedRedisConfig.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AnswerIntegrationTest {
 
@@ -249,8 +251,8 @@ class AnswerIntegrationTest {
     private void createAnswer(Question question, Users picker, Users picked) {
         Answer answer = Answer.builder()
                 .question(question)
-                .picker(picker)
-                .picked(picked)
+                .pickerId(picker.getId())
+                .pickedId(picked.getId())
                 .hintCount(2)
                 .build();
         answerRepository.save(answer);

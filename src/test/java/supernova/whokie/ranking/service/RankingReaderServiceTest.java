@@ -1,10 +1,5 @@
 package supernova.whokie.ranking.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.mockito.BDDMockito.given;
-
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +12,12 @@ import supernova.whokie.ranking.Ranking;
 import supernova.whokie.ranking.infrastructure.repoistory.RankingRepository;
 import supernova.whokie.ranking.service.dto.RankingModel;
 import supernova.whokie.user.Users;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class RankingReaderServiceTest {
@@ -69,10 +70,10 @@ class RankingReaderServiceTest {
     }
 
     private List<Ranking> createRankings() {
-        Ranking ranking1 = Ranking.builder().users(users.get(0)).count(100).groups(group1).build();
-        Ranking ranking2 = Ranking.builder().users(users.get(0)).count(90).groups(group1).build();
-        Ranking ranking3 = Ranking.builder().users(users.get(0)).count(80).groups(group1).build();
-        Ranking ranking4 = Ranking.builder().users(users.get(1)).count(80).groups(group1).build();
+        Ranking ranking1 = Ranking.builder().userId(users.get(0).getId()).count(100).groups(group1).build();
+        Ranking ranking2 = Ranking.builder().userId(users.get(0).getId()).count(90).groups(group1).build();
+        Ranking ranking3 = Ranking.builder().userId(users.get(0).getId()).count(80).groups(group1).build();
+        Ranking ranking4 = Ranking.builder().userId(users.get(1).getId()).count(80).groups(group1).build();
         return List.of(ranking1, ranking2, ranking3, ranking4);
     }
 

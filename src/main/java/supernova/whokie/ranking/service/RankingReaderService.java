@@ -18,7 +18,7 @@ public class RankingReaderService {
 
     @Transactional(readOnly = true)
     public List<Ranking> getTop3RankingByUserId(Long userId) {
-        return rankingRepository.findTop3ByUsers_IdOrderByCountDesc(userId);
+        return rankingRepository.findTop3ByUserIdOrderByCountDesc(userId);
     }
 
     @Transactional(readOnly = true)
@@ -26,7 +26,7 @@ public class RankingReaderService {
         List<Ranking> rankings = rankingRepository.findAllByGroupIdFetchJoinUsers(groupId);
         Map<Long, Integer> map = new HashMap<>();
         for (Ranking ranking : rankings) {
-            Long userId = ranking.getUsers().getId();
+            Long userId = ranking.getUserId();
             map.putIfAbsent(userId, 0);
             map.merge(userId, ranking.getCount(), Integer::sum);
         }

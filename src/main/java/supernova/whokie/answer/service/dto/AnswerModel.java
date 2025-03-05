@@ -1,12 +1,11 @@
 package supernova.whokie.answer.service.dto;
 
-import java.time.LocalDate;
 import lombok.Builder;
 import supernova.whokie.answer.Answer;
-import supernova.whokie.global.exception.InvalidEntityException;
 import supernova.whokie.user.Users;
 import supernova.whokie.user.service.dto.UserModel;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class AnswerModel {
@@ -31,8 +30,8 @@ public class AnswerModel {
         Boolean valid,
         String content
     ) {
-        public static AnswerModel.Hint from(Answer answer, int hintCount, boolean valid) {
-            return Hint.builder().hintNum(hintCount).valid(valid).content(answer.getPickerInfoByHintCount(hintCount, valid)).build();
+        public static AnswerModel.Hint from(Answer answer, int hintCount, boolean valid, Users picker) {
+            return Hint.builder().hintNum(hintCount).valid(valid).content(answer.getPickerInfoByHintCount(hintCount, valid, picker)).build();
         }
     }
 
