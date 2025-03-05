@@ -12,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import supernova.whokie.answer.controller.dto.AnswerRequest;
 import supernova.whokie.answer.controller.dto.AnswerResponse;
-import supernova.whokie.answer.service.AnswerRedissonService;
 import supernova.whokie.answer.service.AnswerService;
 import supernova.whokie.answer.service.dto.AnswerModel;
 import supernova.whokie.global.annotation.Authenticate;
@@ -29,14 +28,13 @@ import java.util.List;
 public class AnswerController {
 
     private final AnswerService answerService;
-    private final AnswerRedissonService answerRedissonService;
 
     @PostMapping("/common")
     public GlobalResponse common(
         @RequestBody @Valid AnswerRequest.Common request,
         @Authenticate Long userId
     ) {
-        answerRedissonService.answerToCommonQuestion(userId, request.toCommand());
+        answerService.answerToCommonQuestion(userId, request.toCommand());
         return GlobalResponse.builder().message("답변 완료").build();
     }
 
@@ -45,7 +43,7 @@ public class AnswerController {
         @RequestBody @Valid AnswerRequest.Group request,
         @Authenticate Long userId
     ) {
-        answerRedissonService.answerToGroupQuestion(userId, request.toCommand());
+        answerService.answerToGroupQuestion(userId, request.toCommand());
         return GlobalResponse.builder().message("그룹 질문 답변 완료").build();
     }
 
