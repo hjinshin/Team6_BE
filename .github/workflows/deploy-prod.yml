@@ -14,9 +14,9 @@ jobs:
   build:
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      CLIENT_ID: ${{ secrets.CLIENT_ID }}
-      REDIRECT_URI: ${{ secrets.REDIRECT_URI }}
-      DB_URL: ${{ secrets.DB_URL }}
+      CLIENT_ID: ${{ secrets.KAKAO_PROD_CLIENT_ID }}
+      REDIRECT_URI: ${{ secrets.KAKAO_PROD_REDIRECT_URI }}
+      DB_URL: ${{ secrets.DB_PROD_URL }}
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       REDIS_HOST: ${{ secrets.REDIS_PROD_HOST }}
@@ -26,9 +26,9 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_PROD_NAME }}
       KAKAO_PAY_SECRET_KEY: ${{ secrets.KAKAO_PAY_SECRET_KEY }}
-      KAKAO_PAY_APPROVE_REDIRECT_URL: ${{ secrets.KAKAO_PAY_APPROVE_REDIRECT_URL }}
-      KAKAO_PAY_FAIL_REDIRECT_URL: ${{ secrets.KAKAO_PAY_FAIL_REDIRECT_URL }}
-      KAKAO_PAY_CANCEL_REDIRECT_URL: ${{ secrets.KAKAO_PAY_CANCEL_REDIRECT_URL }}
+      KAKAO_PAY_APPROVE_REDIRECT_URL: ${{ secrets.KAKAO_PAY_PROD_APPROVE_REDIRECT_URL }}
+      KAKAO_PAY_FAIL_REDIRECT_URL: ${{ secrets.KAKAO_PAY_PROD_FAIL_REDIRECT_URL }}
+      KAKAO_PAY_CANCEL_REDIRECT_URL: ${{ secrets.KAKAO_PAY_PROD_CANCEL_REDIRECT_URL }}
       URL_SECRET_KEY: ${{ secrets.URL_SECRET_KEY }}
 
     runs-on: ubuntu-latest
@@ -53,8 +53,8 @@ jobs:
       - name: Docker build & push to docker repo
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_REPO }} .
-          docker push ${{ secrets.DOCKER_REPO }}
+          docker build -f Dockerfile -t ${{ secrets.DOCKER_PROD_REPO }} .
+          docker push ${{ secrets.DOCKER_PROD_REPO }}
 
       # appleboy/ssh-action@master 액션을 사용하여 지정한 서버에 ssh로 접속하고, script를 실행합니다.
       # script의 내용은 도커의 기존 프로세스들을 제거하고, docker repo로부터 방금 위에서 push한 내용을 pull 받아 실행하는 것입니다.
@@ -63,23 +63,23 @@ jobs:
         uses: appleboy/ssh-action@master
         id: deploy
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.EC2_PROD_HOST }}
           username: ubuntu
-          key: ${{ secrets.KEY }}
+          key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
             # 8081 포트를 사용하는 컨테이너만 중단하고 제거
             sudo docker ps --filter "publish=8081" -q | xargs -r sudo docker rm -f
             sudo docker image prune -f
             # Pull the latest image
-            sudo docker pull ${{ secrets.DOCKER_REPO }}
+            sudo docker pull ${{ secrets.DOCKER_PROD_REPO }}
             # Run the new container with environment variables
             
             sudo docker run -d -p 8081:8080 \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-            -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
-            -e REDIRECT_URI=${{ secrets.REDIRECT_URI_PROD }} \
-            -e DB_URL=${{ secrets.DB_URL_PROD }} \
+            -e CLIENT_ID=${{ secrets.KAKAO_PROD_CLIENT_ID }} \
+            -e REDIRECT_URI=${{ secrets.KAKAO_PROD_REDIRECT_URI }} \
+            -e DB_URL=${{ secrets.DB_PROD_URL }} \
             -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
             -e REDIS_HOST=${{ secrets.REDIS_PROD_HOST }} \
@@ -89,9 +89,9 @@ jobs:
             -e AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
             -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_PROD_NAME }} \
             -e KAKAO_PAY_SECRET_KEY=${{ secrets.KAKAO_PAY_SECRET_KEY }} \
-            -e KAKAO_PAY_APPROVE_REDIRECT_URL=${{ secrets.KAKAO_PAY_APPROVE_REDIRECT_URL }} \
-            -e KAKAO_PAY_FAIL_REDIRECT_URL=${{ secrets.KAKAO_PAY_FAIL_REDIRECT_URL }} \
-            -e KAKAO_PAY_CANCEL_REDIRECT_URL=${{ secrets.KAKAO_PAY_CANCEL_REDIRECT_URL }} \
+            -e KAKAO_PAY_APPROVE_REDIRECT_URL=${{ secrets.KAKAO_PAY_PROD_APPROVE_REDIRECT_URL }} \
+            -e KAKAO_PAY_FAIL_REDIRECT_URL=${{ secrets.KAKAO_PAY_PROD_FAIL_REDIRECT_URL }} \
+            -e KAKAO_PAY_CANCEL_REDIRECT_URL=${{ secrets.KAKAO_PAY_PROD_CANCEL_REDIRECT_URL }} \
             -e URL_SECRET_KEY=${{ secrets.URL_SECRET_KEY }} \
-            ${{ secrets.DOCKER_REPO }}
+            ${{ secrets.DOCKER_PROD_REPO }}
             
