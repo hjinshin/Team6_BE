@@ -251,7 +251,8 @@ class AnswerIntegrationTest {
     @Test
     @DisplayName("해당 월에 질문이 있는 날짜 반환 테스트")
     void getAnswerRecordDaysTest() throws Exception {
-        LocalDate date = LocalDate.of(2024, 11, 1); // 해당 월 전체 조회
+        LocalDate now = LocalDate.now();
+        LocalDate date = LocalDate.of(now.getYear(), now.getMonth(), 1); // 해당 월 전체 조회
         int todayDay = LocalDate.now().getDayOfMonth();
 
         mockMvc.perform(get("/api/answer/record/days")
