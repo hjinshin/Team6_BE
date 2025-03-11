@@ -92,6 +92,6 @@ jobs:
             -e KAKAO_PAY_FAIL_REDIRECT_URL=${{ secrets.KAKAO_PAY_DEV_FAIL_REDIRECT_URL }} \
             -e KAKAO_PAY_CANCEL_REDIRECT_URL=${{ secrets.KAKAO_PAY_DEV_CANCEL_REDIRECT_URL }} \
             -e URL_SECRET_KEY=${{ secrets.URL_SECRET_KEY }} \
-            ${{ secrets.DOCKER_PROD_REPO }}
+            ${{ secrets.DOCKER_DEV_REPO }}
             
             
