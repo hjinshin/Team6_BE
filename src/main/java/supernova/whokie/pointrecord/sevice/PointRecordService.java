@@ -1,7 +1,6 @@
 package supernova.whokie.pointrecord.sevice;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,6 @@ public class PointRecordService {
     private final PayApiCaller payApiCaller;
     private final UserReaderService userReaderService;
     private final RedisPayService redisPayService;
-    private final ApplicationEventPublisher eventPublisher;
     private final PointRecordReaderService pointRecordReaderService;
 
     @Transactional
@@ -59,8 +57,9 @@ public class PointRecordService {
 
         int purchasedPoint = payApproveInfoResponse.quantity();
         int amount = payApproveInfoResponse.amount().total();
+
         user.increasePoint(purchasedPoint);
-        PointRecord record = PointRecord.create(userId, purchasedPoint, purchasedPoint * 10,
+        PointRecord record = PointRecord.create(userId, purchasedPoint, amount,
                 PointRecordOption.CHARGED, PointConstants.POINT_PURCHASE_MESSAGE);
         pointRecordWriterService.save(record);
 
