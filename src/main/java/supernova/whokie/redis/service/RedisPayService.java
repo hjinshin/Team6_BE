@@ -13,7 +13,7 @@ public class RedisPayService {
     private final PayRepository payRepository;
 
     public void saveTid(Long userId,String tid) {
-        payRepository.save(PayToken.builder().id(userId).tid(tid).build());
+        payRepository.save(PayToken.builder().id(userId).tid(tid).expiresIn(60L).build());
     }
     public String getTid(Long userId){
         PayToken payToken = payRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("해당 tid가 없습니다."));
