@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
-    @Query("SELECT p FROM Profile p JOIN FETCH p.users u WHERE u.id = :userId")
     Optional<Profile> findByUsersId(Long userId);
+
+    @Query("SELECT p FROM Profile p JOIN FETCH p.users u WHERE u.id = :userId")
+    Optional<Profile> findProfileWithMemberByUsersId(Long userId);
 }
