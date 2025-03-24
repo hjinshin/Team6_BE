@@ -53,11 +53,11 @@ public class ProfileServiceTest {
         // given
         String visitorIp = "visitorIp";
         String key = "keykey";
-        RedisVisitCount visitCount = RedisVisitCount.builder().hostId(user.getId()).dailyVisited(10).totalVisited(100).build();
-        given(profileReaderService.getByUserId(user.getId())).willReturn(profile);
+        RedisVisitCount visitCount = RedisVisitCount.builder().hostId(user.getId()).dailyVisited(10)
+            .totalVisited(100).build();
+        given(profileReaderService.getProfileWithMemberByUserId(user.getId())).willReturn(profile);
         given(redisVisitService.visitProfile(user.getId(), visitorIp)).willReturn(visitCount);
         given(s3Service.getSignedUrl(profile.getBackgroundImageUrl())).willReturn(key);
-
 
         // when
         ProfileModel.Info result = profileService.getProfile(user.getId(), visitorIp);
@@ -70,7 +70,7 @@ public class ProfileServiceTest {
             () -> assertThat(result.backgroundImageUrl()).isEqualTo(key),
             () -> assertThat(result.todayVisited()).isEqualTo(visitCount.getDailyVisited()),
             () -> assertThat(result.totalVisited()).isEqualTo(visitCount.getTotalVisited()),
-            () -> then(profileReaderService).should().getByUserId(user.getId())
+            () -> then(profileReaderService).should().getProfileWithMemberByUserId(user.getId())
         );
     }
 
