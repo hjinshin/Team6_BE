@@ -26,7 +26,7 @@ public class ProfileService {
 
     @Transactional(readOnly = true)
     public ProfileModel.Info getProfile(Long userId, String visitorIp) {
-        Profile profile = profileReaderService.getByUserId(userId);
+        Profile profile = profileReaderService.getProfileWithMemberByUserId(userId);
         String imageUrl = profile.getUsers().getImageUrl();
         if (profile.getUsers().isImageUrlStoredInS3()) {
             imageUrl = s3Service.getSignedUrl(imageUrl);
@@ -40,7 +40,8 @@ public class ProfileService {
     @Transactional
     public void updateImage(Long userId, MultipartFile imageFile) {
         String key = S3Util.generateS3Key(ProfileConstants.PROFILE_BG_IMAGE_FOLRDER, userId);
-        S3EventDto.Upload event = S3EventDto.Upload.toDto(imageFile, key, ProfileConstants.PROFILE_BG_IMAGE_WIDTH, ProfileConstants.PROFILE_BG_IMAGE_HEIGHT);
+        S3EventDto.Upload event = S3EventDto.Upload.toDto(imageFile, key,
+            ProfileConstants.PROFILE_BG_IMAGE_WIDTH, ProfileConstants.PROFILE_BG_IMAGE_HEIGHT);
         eventPublisher.publishEvent(event);
 
         Profile profile = profileReaderService.getByUserId(userId);
