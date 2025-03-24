@@ -20,4 +20,12 @@ public class ProfileReaderService {
             .orElseThrow(
                 () -> new EntityNotFoundException(MessageConstants.USER_NOT_FOUND_MESSAGE));
     }
+
+    @Transactional(readOnly = true)
+    public Profile getProfileWithMemberByUserId(Long userId) {
+        return profileRepository.findProfileWithMemberByUsersId(userId)
+            .orElseThrow(
+                () -> new EntityNotFoundException(MessageConstants.USER_NOT_FOUND_MESSAGE));
+    }
+
 }
