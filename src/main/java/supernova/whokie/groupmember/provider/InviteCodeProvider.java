@@ -30,7 +30,7 @@ public class InviteCodeProvider {
     }
 
     private String encrypt(String data) throws Exception {
-        System.out.println(urlSecretKey);
+//        System.out.println(urlSecretKey);
         SecretKeySpec secretKey = new SecretKeySpec(urlSecretKey.getBytes(StandardCharsets.UTF_8),
             "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");

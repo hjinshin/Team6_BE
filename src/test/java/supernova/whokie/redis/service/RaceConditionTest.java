@@ -20,6 +20,7 @@ import supernova.whokie.ranking.Ranking;
 import supernova.whokie.ranking.infrastructure.repoistory.RankingRepository;
 import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.redis.entity.RedisVisitCount;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitCountRepository;
 import supernova.whokie.user.Gender;
 import supernova.whokie.user.Role;
@@ -94,7 +95,8 @@ public class RaceConditionTest {
             int finalI = i;
             executorService.submit(() -> {
                 try {
-                    redisVisitService.visitProfile(hostId, visitorIp + finalI);
+                    var event = RedisDto.Visit.toDto(hostId, visitorIp + finalI);
+                    redisVisitService.visitProfile(event);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {

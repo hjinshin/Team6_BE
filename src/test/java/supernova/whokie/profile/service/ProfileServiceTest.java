@@ -7,9 +7,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import supernova.whokie.profile.Profile;
 import supernova.whokie.profile.service.dto.ProfileModel;
 import supernova.whokie.redis.entity.RedisVisitCount;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.service.RedisVisitService;
 import supernova.whokie.s3.service.S3Service;
 import supernova.whokie.user.Gender;
@@ -20,8 +22,10 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doNothing;
 
 @ExtendWith(MockitoExtension.class)
 public class ProfileServiceTest {
@@ -37,6 +41,9 @@ public class ProfileServiceTest {
 
     @Mock
     private S3Service s3Service;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private Users user;
     private Profile profile;
@@ -56,7 +63,8 @@ public class ProfileServiceTest {
         RedisVisitCount visitCount = RedisVisitCount.builder().hostId(user.getId()).dailyVisited(10)
             .totalVisited(100).build();
         given(profileReaderService.getProfileWithMemberByUserId(user.getId())).willReturn(profile);
-        given(redisVisitService.visitProfile(user.getId(), visitorIp)).willReturn(visitCount);
+        doNothing().when(eventPublisher).publishEvent(any(RedisDto.Visit.class));
+        given(redisVisitService.findVisitCountByHostId(user.getId())).willReturn(visitCount);
         given(s3Service.getSignedUrl(profile.getBackgroundImageUrl())).willReturn(key);
 
         // when

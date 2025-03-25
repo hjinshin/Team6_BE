@@ -10,6 +10,7 @@ import supernova.whokie.profile.constants.ProfileConstants;
 import supernova.whokie.profile.service.dto.ProfileCommand;
 import supernova.whokie.profile.service.dto.ProfileModel;
 import supernova.whokie.redis.entity.RedisVisitCount;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.service.RedisVisitService;
 import supernova.whokie.s3.event.S3EventDto;
 import supernova.whokie.s3.service.S3Service;
@@ -33,7 +34,10 @@ public class ProfileService {
         }
         String bgImgUrl = s3Service.getSignedUrl(profile.getBackgroundImageUrl());
 
-        RedisVisitCount visitCount = redisVisitService.visitProfile(userId, visitorIp);
+        RedisDto.Visit event = RedisDto.Visit.toDto(userId, visitorIp);
+        eventPublisher.publishEvent(event);
+
+        RedisVisitCount visitCount = redisVisitService.findVisitCountByHostId(userId);
         return ProfileModel.Info.from(profile, visitCount, bgImgUrl, imageUrl);
     }
 

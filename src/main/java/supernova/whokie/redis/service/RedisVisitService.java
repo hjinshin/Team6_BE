@@ -10,6 +10,7 @@ import supernova.whokie.global.annotation.RedissonLock;
 import supernova.whokie.profile.service.ProfileVisitReadService;
 import supernova.whokie.redis.entity.RedisVisitCount;
 import supernova.whokie.redis.entity.RedisVisitor;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitCountRepository;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitorRepository;
 import supernova.whokie.redis.service.dto.RedisCommand;
@@ -23,18 +24,16 @@ public class RedisVisitService {
     private final RedisVisitCountRepository redisVisitCountRepository;
     private final ProfileVisitReadService profileVisitReadService;
 
-    @RedissonLock(value = "#hostId")
-    public RedisVisitCount visitProfile(Long hostId, String visitorIp) {
-        RedisVisitCount redisVisitCount = findVisitCountByHostId(hostId);
-        log.info("visitorIp: {}", visitorIp);
-        if(!checkVisited(hostId, visitorIp)) {
+    @RedissonLock(value = "#event.hostId()")
+    public void visitProfile(RedisDto.Visit event) {
+//        log.info("visitorIp: {}", event.visitorIp();
+        if(!checkVisited(event.hostId(), event.visitorIp())) {
+            RedisVisitCount redisVisitCount = findVisitCountByHostId(event.hostId());
             redisVisitCount.visit();
             redisVisitCountRepository.save(redisVisitCount);
         }
         // 방문자 로그 기록
-        saveVisitor(hostId, visitorIp);
-
-        return redisVisitCount;
+        saveVisitor(event.hostId(), event.visitorIp());
     }
 
     public RedisVisitCount findVisitCountByHostId(Long hostId) {

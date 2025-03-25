@@ -32,7 +32,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         request.setAttribute("userId", claim.getSubject());
         request.setAttribute("role", claim.get("role"));
 
-        System.out.println("userId: " + claim.getSubject());
+//        System.out.println("userId: " + claim.getSubject());
         return true;
     }
 }
