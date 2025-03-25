@@ -1,8 +1,5 @@
 package supernova.whokie.redis.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,24 +13,24 @@ import supernova.whokie.redis.infrastructure.repository.RedisVisitorRepository;
 import supernova.whokie.redis.service.dto.RedisCommand;
 import supernova.whokie.redis.util.RedisUtil;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RedisVisitService {
+
     private final RedisVisitorRepository redisVisitorRepository;
     private final RedisVisitCountRepository redisVisitCountRepository;
     private final ProfileVisitReadService profileVisitReadService;
 
     @RedissonLock(value = "#event.hostId()")
     public void visitProfile(RedisDto.Visit event) {
-//        log.info("visitorIp: {}", event.visitorIp();
-        if(!checkVisited(event.hostId(), event.visitorIp())) {
-            RedisVisitCount redisVisitCount = findVisitCountByHostId(event.hostId());
-            redisVisitCount.visit();
-            redisVisitCountRepository.save(redisVisitCount);
-        }
-        // 방문자 로그 기록
-        saveVisitor(event.hostId(), event.visitorIp());
+        RedisVisitCount redisVisitCount = findVisitCountByHostId(event.hostId());
+        redisVisitCount.visit();
+        redisVisitCountRepository.save(redisVisitCount);
     }
 
     public RedisVisitCount findVisitCountByHostId(Long hostId) {
@@ -56,8 +53,11 @@ public class RedisVisitService {
         redisVisitCountRepository.saveAll(visitCounts);
     }
 
+    @RedissonLock(value = "#hostId + #visitorIp")
     public boolean checkVisited(Long hostId, String visitorIp) {
         String id = RedisUtil.generateVisitorId(hostId, visitorIp);
+        // 방문자 로그 기록
+        saveVisitor(hostId, visitorIp);
         return redisVisitorRepository.existsById(id);
     }
 

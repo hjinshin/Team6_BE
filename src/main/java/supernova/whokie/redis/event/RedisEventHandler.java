@@ -2,6 +2,7 @@ package supernova.whokie.redis.event;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import supernova.whokie.redis.service.RedisVisitService;
 
@@ -10,8 +11,11 @@ import supernova.whokie.redis.service.RedisVisitService;
 public class RedisEventHandler {
     private final RedisVisitService redisVisitService;
 
+    @Async
     @EventListener
     public void redisVisitListener(RedisDto.Visit event) {
-        redisVisitService.visitProfile(event);
+        if (!redisVisitService.checkVisited(event.hostId(), event.visitorIp())) {
+            redisVisitService.visitProfile(event);
+        }
     }
 }
