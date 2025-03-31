@@ -34,10 +34,10 @@ public class ProfileService {
         }
         String bgImgUrl = s3Service.getSignedUrl(profile.getBackgroundImageUrl());
 
+        RedisVisitCount visitCount = redisVisitService.findVisitCountByHostId(userId);
         RedisDto.Visit event = RedisDto.Visit.toDto(userId, visitorIp);
         eventPublisher.publishEvent(event);
 
-        RedisVisitCount visitCount = redisVisitService.findVisitCountByHostId(userId);
         return ProfileModel.Info.from(profile, visitCount, bgImgUrl, imageUrl);
     }
 
