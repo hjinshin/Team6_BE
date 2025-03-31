@@ -15,6 +15,7 @@ import supernova.config.EmbeddedRedisConfig;
 import supernova.whokie.profile.service.ProfileVisitReadService;
 import supernova.whokie.redis.entity.RedisVisitCount;
 import supernova.whokie.redis.entity.RedisVisitor;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitCountRepository;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitorRepository;
 import supernova.whokie.redis.service.dto.RedisCommand;
@@ -64,7 +65,10 @@ class RedisVisitServiceTest {
         int oldTotalVisited = redisVisitCount1.getTotalVisited();
 
         // when
-        RedisVisitCount actual = redisVisitService.visitProfile(hostId, visitorIp);
+        var event = RedisDto.Visit.toDto(hostId, visitorIp);
+        redisVisitService.checkVisited(hostId, visitorIp);
+        redisVisitService.visitProfile(event);
+        RedisVisitCount actual = redisVisitService.findVisitCountByHostId(hostId);
 
         // then
         assertAll(
