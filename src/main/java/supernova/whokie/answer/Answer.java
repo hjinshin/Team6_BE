@@ -1,7 +1,6 @@
 package supernova.whokie.answer;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -29,25 +28,21 @@ public class Answer extends BaseTimeEntity {
     private Question question; // question id
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "picker_id", nullable = false)
-    private Users picker; // picker id
+    private Long pickerId; // picker id
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "picked_id", nullable = false)
-    private Users picked; // picked id
+    private Long pickedId; // picked id
 
     @NotNull
     @Column(nullable = false)
     @Min(0)
     private Integer hintCount;
 
-    public static Answer create(Question question, Users picker, Users picked, Integer hintCount) {
+    public static Answer create(Question question, Long picker, Long picked, Integer hintCount) {
         return Answer.builder()
                 .question(question)
-                .picker(picker)
-                .picked(picked)
+                .pickerId(picker)
+                .pickedId(picked)
                 .hintCount(hintCount)
                 .build();
     }
@@ -60,14 +55,14 @@ public class Answer extends BaseTimeEntity {
         throw new InvalidEntityException("힌트 카운트는 최대 3까지 가능합니다.");
     }
 
-    public boolean isNotPicked(Users user){
-        return !(this.picked.getId().equals(user.getId()));
+    public boolean isNotPicked(Long userId){
+        return !(this.pickedId.equals(userId));
     }
 
-    public String getPickerInfoByHintCount(int hintCount, boolean valid){
+    public String getPickerInfoByHintCount(int hintCount, boolean valid, Users picker){
         if(valid){
             String gender;
-            if((String.valueOf(this.picker.getGender())).equals("M")){
+            if((String.valueOf(picker.getGender())).equals("M")){
                 gender = "남자";
             }else{
                 gender = "여자";
@@ -77,10 +72,10 @@ public class Answer extends BaseTimeEntity {
                     return gender;
                 }
                 case 2 -> {
-                    return String.valueOf(this.picker.getAge());
+                    return String.valueOf(picker.getAge());
                 }
                 case 3 -> {
-                    return getInitials(this.picker.getName());
+                    return getInitials(picker.getName());
                 }
             }
         }

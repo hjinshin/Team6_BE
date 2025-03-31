@@ -47,7 +47,7 @@ class RankingReaderServiceTest {
             rankingList.get(0).getCount() + rankingList.get(1).getCount() + rankingList.get(2)
                 .getCount();
         int finalCount1 = rankingList.get(3).getCount();
-        given(rankingRepository.findAllByGroupIdFetchJoinUsers(group.getId()))
+        given(rankingRepository.findAllByGroupId(group.getId()))
             .willReturn(rankingList);
 
         // when
@@ -69,10 +69,10 @@ class RankingReaderServiceTest {
     }
 
     private List<Ranking> createRankings() {
-        Ranking ranking1 = Ranking.builder().users(users.get(0)).count(100).groups(group1).build();
-        Ranking ranking2 = Ranking.builder().users(users.get(0)).count(90).groups(group1).build();
-        Ranking ranking3 = Ranking.builder().users(users.get(0)).count(80).groups(group1).build();
-        Ranking ranking4 = Ranking.builder().users(users.get(1)).count(80).groups(group1).build();
+        Ranking ranking1 = Ranking.builder().userId(users.get(0).getId()).count(100).groups(group1).build();
+        Ranking ranking2 = Ranking.builder().userId(users.get(0).getId()).count(90).groups(group1).build();
+        Ranking ranking3 = Ranking.builder().userId(users.get(0).getId()).count(80).groups(group1).build();
+        Ranking ranking4 = Ranking.builder().userId(users.get(1).getId()).count(80).groups(group1).build();
         return List.of(ranking1, ranking2, ranking3, ranking4);
     }
 
