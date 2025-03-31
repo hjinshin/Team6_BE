@@ -66,6 +66,7 @@ class RedisVisitServiceTest {
 
         // when
         var event = RedisDto.Visit.toDto(hostId, visitorIp);
+        redisVisitService.checkVisited(hostId, visitorIp);
         redisVisitService.visitProfile(event);
         RedisVisitCount actual = redisVisitService.findVisitCountByHostId(hostId);
 
