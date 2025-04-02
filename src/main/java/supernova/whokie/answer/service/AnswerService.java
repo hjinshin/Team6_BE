@@ -50,8 +50,6 @@ public class AnswerService {
 
     @Transactional(readOnly = true)
     public Page<AnswerModel.Record> getAnswerRecord(Pageable pageable, Long userId, LocalDate date) {
-        Users user = userReaderService.getUserById(userId);
-
         LocalDateTime startDate;
         LocalDateTime endDate;
 
@@ -64,22 +62,19 @@ public class AnswerService {
         }
 
         // 지정된 기간 내의 데이터를 조회
-        Page<Answer> answers = answerReaderService.getAnswerList(pageable, user, startDate, endDate);
+        Page<Answer> answers = answerReaderService.getAnswerList(pageable, userId, startDate, endDate);
         return answers.map(AnswerModel.Record::from);
     }
 
     @Transactional(readOnly = true)
     public AnswerModel.RecordDays getAnswerRecordDays(Long userId, LocalDate date) {
-        Users user = userReaderService.getUserById(userId);
-
         LocalDateTime startDate = date.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endDate = date.withDayOfMonth(date.lengthOfMonth()).atTime(LocalTime.MAX);
 
-        List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(user, startDate, endDate);
+        List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(userId, startDate, endDate);
 
         return AnswerModel.RecordDays.from(answerRecordDays);
     }
-
 
     @Transactional
     public void answerToCommonQuestion(Long userId, AnswerCommand.CommonAnswer command) {
@@ -121,7 +116,7 @@ public class AnswerService {
         Users user = userReaderService.getUserById(userId);
         Answer answer = answerReaderService.getAnswerById(command.answerId());
 
-        if (answer.isNotPicked(user)){
+        if (answer.isNotPicked(userId)){
             throw new InvalidEntityException(MessageConstants.NOT_PICKED_USER_MESSAGE);
         }
 
@@ -138,10 +133,10 @@ public class AnswerService {
 
     @Transactional(readOnly = true)
     public List<AnswerModel.Hint> getHints(Long userId, Long answerId) {
-        Users user = userReaderService.getUserById(userId);
         Answer answer = answerReaderService.getAnswerById(answerId);
+        Users picker = userReaderService.getUserById(answer.getPickerId());
 
-        if (answer.isNotPicked(user)){
+        if (answer.isNotPicked(userId)){
             throw new InvalidEntityException(MessageConstants.NOT_PICKED_USER_MESSAGE);
         }
 
@@ -149,7 +144,7 @@ public class AnswerService {
 
         for (int i = 1; i <= AnswerConstants.MAX_HINT_COUNT; i++) {
             boolean valid = (i <= answer.getHintCount());
-            allHints.add(AnswerModel.Hint.from(answer, i, valid));
+            allHints.add(AnswerModel.Hint.from(answer, i, valid, picker));
         }
 
         return allHints;
@@ -157,18 +152,19 @@ public class AnswerService {
 
     private void answerToQuestion(Long userId, Long pickedId, Question question) {
         Users user = userReaderService.getUserById(userId);
-        Users picked = userReaderService.getUserById(pickedId);
         Groups group = groupReaderService.getGroupById(question.getGroupId());
 
-        Answer answer = Answer.create(question, user, picked, AnswerConstants.DEFAULT_HINT_COUNT);
+        Answer answer = Answer.create(question, userId, pickedId, AnswerConstants.DEFAULT_HINT_COUNT);
         answerWriterService.save(answer);
 
         // Ranking Count 증가
-        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(picked, question.getContent(), group);
+        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(pickedId, question.getContent(), group);
+
+        // Users Point 증가
         user.increasePoint(AnswerConstants.ANSWER_POINT);
 
         // 웹 알림 전송
-        AlarmEventDto.Alarm alarmEvent = AlarmEventDto.Alarm.toDto(picked.getId(), question.getContent());
+        AlarmEventDto.Alarm alarmEvent = AlarmEventDto.Alarm.toDto(pickedId, question.getContent());
         eventPublisher.publishEvent(alarmEvent);
 
         // 포인트 기록

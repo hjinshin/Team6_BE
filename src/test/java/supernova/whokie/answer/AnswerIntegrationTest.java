@@ -269,8 +269,8 @@ class AnswerIntegrationTest {
     private void createAnswer(Question question, Users picker, Users picked) {
         Answer answer = Answer.builder()
                 .question(question)
-                .picker(picker)
-                .picked(picked)
+                .pickerId(picker.getId())
+                .pickedId(picked.getId())
                 .hintCount(2)
                 .build();
         answerRepository.save(answer);

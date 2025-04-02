@@ -55,15 +55,15 @@ class RankingWriterServiceTest {
         // given
         Ranking ranking = rankings.get(0);
         int originalCount = ranking.getCount();
-        Users user = ranking.getUsers();
+        Long userId = ranking.getUserId();
         String question = ranking.getQuestion();
         Groups group1 = ranking.getGroups();
 
         // when
-        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(user, question, group1);
+        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(userId, question, group1);
         entityManager.flush();
         entityManager.clear();
-        Ranking actual = rankingRepository.findByUsersAndQuestionAndGroups(user, question, group1).orElse(null);
+        Ranking actual = rankingRepository.findByUserIdAndQuestionAndGroups(userId, question, group1).orElse(null);
 
         // then
         assertThat(actual.getCount()).isEqualTo(originalCount + 1);
@@ -112,13 +112,13 @@ class RankingWriterServiceTest {
     }
 
     private List<Ranking> createRankings() {
-        Ranking ranking1 = Ranking.builder().id(1L).question("q1").users(users.get(0)).count(100)
+        Ranking ranking1 = Ranking.builder().id(1L).question("q1").userId(users.get(0).getId()).count(100)
                 .groups(groups.get(0)).build();
-        Ranking ranking2 = Ranking.builder().id(2L).question("q2").users(users.get(0)).count(70)
+        Ranking ranking2 = Ranking.builder().id(2L).question("q2").userId(users.get(0).getId()).count(70)
                 .groups(groups.get(0)).build();
-        Ranking ranking3 = Ranking.builder().id(3L).question("q3").users(users.get(0)).count(90)
+        Ranking ranking3 = Ranking.builder().id(3L).question("q3").userId(users.get(0).getId()).count(90)
                 .groups(groups.get(1)).build();
-        Ranking ranking4 = Ranking.builder().id(4L).question("q4").users(users.get(1)).count(80)
+        Ranking ranking4 = Ranking.builder().id(4L).question("q4").userId(users.get(1).getId()).count(80)
                 .groups(groups.get(1)).build();
 
         return rankingRepository.saveAll(List.of(ranking1, ranking2, ranking3, ranking4));

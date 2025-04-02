@@ -7,7 +7,6 @@ import supernova.whokie.group.Groups;
 import supernova.whokie.ranking.Ranking;
 import supernova.whokie.ranking.constants.RankingConstants;
 import supernova.whokie.ranking.infrastructure.repoistory.RankingRepository;
-import supernova.whokie.user.Users;
 
 @Service
 @RequiredArgsConstructor
@@ -20,21 +19,20 @@ public class RankingWriterService {
     }
 
     @Transactional
-    public Ranking createRanking(Users user, String question, Groups groups) {
+    public Ranking createRanking(Long userId, String question, Groups groups) {
         Ranking ranking = Ranking.builder()
                 .question(question)
                 .count(RankingConstants.DEFAULT_RANKING_COUNT)
-                .users(user)
+                .userId(userId)
                 .groups(groups)
                 .build();
         return rankingRepository.save(ranking);
     }
 
     @Transactional
-    public void increaseRankingCountByUserAndQuestionAndGroups(Users user, String question, Groups group) {
-        Ranking ranking = rankingRepository.findByUsersAndQuestionAndGroups(user, question, group)
-                .orElseGet(() -> createRanking(user, question, group));
-        rankingRepository.incrementCount(ranking.getId());
-        rankingRepository.save(ranking);
+    public void increaseRankingCountByUserAndQuestionAndGroups(Long userId, String question, Groups group) {
+        Ranking ranking = rankingRepository.findByUserIdAndQuestionAndGroups(userId, question, group)
+                .orElseGet(() -> createRanking(userId, question, group));
+        ranking.increaseCount();
     }
 }
