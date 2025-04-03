@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import supernova.whokie.alarm.event.AlarmEventDto;
 import supernova.whokie.answer.Answer;
 import supernova.whokie.answer.constants.AnswerConstants;
 import supernova.whokie.answer.service.dto.AnswerCommand;
@@ -15,7 +17,6 @@ import supernova.whokie.friend.Friend;
 import supernova.whokie.friend.service.FriendReaderService;
 import supernova.whokie.global.constants.MessageConstants;
 import supernova.whokie.global.exception.InvalidEntityException;
-import supernova.whokie.group.Groups;
 import supernova.whokie.group.service.GroupReaderService;
 import supernova.whokie.pointrecord.PointRecordOption;
 import supernova.whokie.pointrecord.constants.PointConstants;
@@ -26,6 +27,7 @@ import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.s3.service.S3Service;
 import supernova.whokie.user.Users;
 import supernova.whokie.user.service.UserReaderService;
+import supernova.whokie.user.service.UserService;
 import supernova.whokie.user.service.dto.UserModel;
 
 import java.time.LocalDate;
@@ -47,6 +49,7 @@ public class AnswerService {
     private final FriendReaderService friendReaderService;
     private final S3Service s3Service;
     private final RankingWriterService rankingWriterService;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
     public Page<AnswerModel.Record> getAnswerRecord(Pageable pageable, Long userId, LocalDate date) {
@@ -74,23 +77,6 @@ public class AnswerService {
         List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(userId, startDate, endDate);
 
         return AnswerModel.RecordDays.from(answerRecordDays);
-    }
-
-    @Transactional
-    public void answerToCommonQuestion(Long userId, AnswerCommand.CommonAnswer command) {
-        Question question = questionReaderService.getQuestionById(command.questionId());
-
-        answerToQuestion(userId, command.pickedId(), question);
-    }
-
-    @Transactional
-    public void answerToGroupQuestion(Long userId, AnswerCommand.Group command) {
-        Question question = questionReaderService.getQuestionById(command.questionId());
-        if(question.isNotCorrectGroupQuestion(command.groupId())) {
-            throw new InvalidEntityException(MessageConstants.GROUP_NOT_FOUND_MESSAGE);
-        }
-
-        answerToQuestion(userId, command.pickedId(), question);
     }
 
     @Transactional(readOnly = true)
@@ -150,26 +136,16 @@ public class AnswerService {
         return allHints;
     }
 
-    private void answerToQuestion(Long userId, Long pickedId, Question question) {
-        Users user = userReaderService.getUserById(userId);
-        Groups group = groupReaderService.getGroupById(question.getGroupId());
-
+    @Retryable(
+            retryFor = {ObjectOptimisticLockingFailureException.class},
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 100))
+    @Transactional
+    public void answerToQuestion(Long userId, Long pickedId, Question question) {
         Answer answer = Answer.create(question, userId, pickedId, AnswerConstants.DEFAULT_HINT_COUNT);
         answerWriterService.save(answer);
 
-        // Ranking Count 증가
-        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(pickedId, question.getContent(), group);
-
         // Users Point 증가
-        user.increasePoint(AnswerConstants.ANSWER_POINT);
-
-        // 웹 알림 전송
-        AlarmEventDto.Alarm alarmEvent = AlarmEventDto.Alarm.toDto(pickedId, question.getContent());
-        eventPublisher.publishEvent(alarmEvent);
-
-        // 포인트 기록
-        PointRecordEventDto.Earn pointEvent = PointRecordEventDto.Earn.toDto(userId, AnswerConstants.ANSWER_POINT, 0,
-                PointRecordOption.EARN, PointConstants.POINT_EARN_MESSAGE);
-        eventPublisher.publishEvent(pointEvent);
+        userService.increasePoint(userId);
     }
 }

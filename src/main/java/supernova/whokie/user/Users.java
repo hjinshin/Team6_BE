@@ -50,6 +50,9 @@ public class Users extends BaseTimeEntity {
     @NotNull
     private Role role;
 
+    @Version
+    private Long version;
+
     public int getAge() {
         if(birthDate == null) return 0;
 
