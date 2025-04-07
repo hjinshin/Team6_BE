@@ -22,6 +22,7 @@ import supernova.whokie.pointrecord.constants.PointConstants;
 import supernova.whokie.pointrecord.event.PointRecordEventDto;
 import supernova.whokie.question.Question;
 import supernova.whokie.question.service.QuestionReaderService;
+import supernova.whokie.ranking.event.RankingEventDto;
 import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.s3.service.S3Service;
 import supernova.whokie.user.Users;
@@ -33,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +51,8 @@ public class AnswerService {
     private final RankingWriterService rankingWriterService;
 
     @Transactional(readOnly = true)
-    public Page<AnswerModel.Record> getAnswerRecord(Pageable pageable, Long userId, LocalDate date) {
+    public Page<AnswerModel.Record> getAnswerRecord(Pageable pageable, Long userId,
+        LocalDate date) {
         LocalDateTime startDate;
         LocalDateTime endDate;
 
@@ -62,7 +65,8 @@ public class AnswerService {
         }
 
         // 지정된 기간 내의 데이터를 조회
-        Page<Answer> answers = answerReaderService.getAnswerList(pageable, userId, startDate, endDate);
+        Page<Answer> answers = answerReaderService.getAnswerList(pageable, userId, startDate,
+            endDate);
         return answers.map(AnswerModel.Record::from);
     }
 
@@ -71,12 +75,13 @@ public class AnswerService {
         LocalDateTime startDate = date.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endDate = date.withDayOfMonth(date.lengthOfMonth()).atTime(LocalTime.MAX);
 
-        List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(userId, startDate, endDate);
+        List<Integer> answerRecordDays = answerReaderService.getAnswerRecordDays(userId, startDate,
+            endDate);
 
         return AnswerModel.RecordDays.from(answerRecordDays);
     }
 
-    @Transactional
+    //    @Transactional
     public void answerToCommonQuestion(Long userId, AnswerCommand.CommonAnswer command) {
         Question question = questionReaderService.getQuestionById(command.questionId());
 
@@ -86,7 +91,7 @@ public class AnswerService {
     @Transactional
     public void answerToGroupQuestion(Long userId, AnswerCommand.Group command) {
         Question question = questionReaderService.getQuestionById(command.questionId());
-        if(question.isNotCorrectGroupQuestion(command.groupId())) {
+        if (question.isNotCorrectGroupQuestion(command.groupId())) {
             throw new InvalidEntityException(MessageConstants.GROUP_NOT_FOUND_MESSAGE);
         }
 
@@ -100,13 +105,13 @@ public class AnswerService {
         List<Friend> allFriends = friendReaderService.getAllByHostUser(user);
 
         List<UserModel.PickedInfo> friendsInfoList = allFriends.stream()
-                .map(friend -> {
-                    String imageUrl = friend.getFriendUser().getImageUrl();
-                    if (user.isImageUrlStoredInS3()) {
-                        imageUrl = s3Service.getSignedUrl(imageUrl);
-                    }
-                    return UserModel.PickedInfo.from(friend.getFriendUser(), imageUrl);
-                }).toList();
+            .map(friend -> {
+                String imageUrl = friend.getFriendUser().getImageUrl();
+                if (user.isImageUrlStoredInS3()) {
+                    imageUrl = s3Service.getSignedUrl(imageUrl);
+                }
+                return UserModel.PickedInfo.from(friend.getFriendUser(), imageUrl);
+            }).toList();
 
         return AnswerModel.Refresh.from(friendsInfoList);
     }
@@ -116,7 +121,7 @@ public class AnswerService {
         Users user = userReaderService.getUserById(userId);
         Answer answer = answerReaderService.getAnswerById(command.answerId());
 
-        if (answer.isNotPicked(userId)){
+        if (answer.isNotPicked(userId)) {
             throw new InvalidEntityException(MessageConstants.NOT_PICKED_USER_MESSAGE);
         }
 
@@ -126,8 +131,9 @@ public class AnswerService {
         answer.increaseHintCount();
 
         // 포인트 기록
-        PointRecordEventDto.Earn pointEvent = PointRecordEventDto.Earn.toDto(userId, decreasedPoint, decreasedPoint,
-                PointRecordOption.USED, PointConstants.POINT_USE_MESSAGE);
+        PointRecordEventDto.Earn pointEvent = PointRecordEventDto.Earn.toDto(userId, decreasedPoint,
+            decreasedPoint,
+            PointRecordOption.USED, PointConstants.POINT_USE_MESSAGE);
         eventPublisher.publishEvent(pointEvent);
     }
 
@@ -136,7 +142,7 @@ public class AnswerService {
         Answer answer = answerReaderService.getAnswerById(answerId);
         Users picker = userReaderService.getUserById(answer.getPickerId());
 
-        if (answer.isNotPicked(userId)){
+        if (answer.isNotPicked(userId)) {
             throw new InvalidEntityException(MessageConstants.NOT_PICKED_USER_MESSAGE);
         }
 
@@ -152,24 +158,30 @@ public class AnswerService {
 
     private void answerToQuestion(Long userId, Long pickedId, Question question) {
         Users user = userReaderService.getUserById(userId);
-        Groups group = groupReaderService.getGroupById(question.getGroupId());
-
-        Answer answer = Answer.create(question, userId, pickedId, AnswerConstants.DEFAULT_HINT_COUNT);
-        answerWriterService.save(answer);
-
-        // Ranking Count 증가
-        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(pickedId, question.getContent(), group);
-
         // Users Point 증가
         user.increasePoint(AnswerConstants.ANSWER_POINT);
+
+        Answer answer = Answer.create(question, userId, pickedId,
+            AnswerConstants.DEFAULT_HINT_COUNT);
+        answerWriterService.save(answer);
+
+//        Groups group = groupReaderService.getGroupById(question.getGroupId());
+
+        RankingEventDto.Increase rankingEvent = RankingEventDto.Increase.toDto(pickedId,
+            question);
+        eventPublisher.publishEvent(rankingEvent);
+        // Ranking Count 증가
+//        rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(pickedId,
+//            question.getContent(), group);
 
         // 웹 알림 전송
         AlarmEventDto.Alarm alarmEvent = AlarmEventDto.Alarm.toDto(pickedId, question.getContent());
         eventPublisher.publishEvent(alarmEvent);
 
         // 포인트 기록
-        PointRecordEventDto.Earn pointEvent = PointRecordEventDto.Earn.toDto(userId, AnswerConstants.ANSWER_POINT, 0,
-                PointRecordOption.EARN, PointConstants.POINT_EARN_MESSAGE);
+        PointRecordEventDto.Earn pointEvent = PointRecordEventDto.Earn.toDto(userId,
+            AnswerConstants.ANSWER_POINT, 0,
+            PointRecordOption.EARN, PointConstants.POINT_EARN_MESSAGE);
         eventPublisher.publishEvent(pointEvent);
     }
 }
