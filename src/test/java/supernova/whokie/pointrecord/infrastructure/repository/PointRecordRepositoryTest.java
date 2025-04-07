@@ -82,9 +82,9 @@ class PointRecordRepositoryTest {
     }
 
     private List<PointRecord> createPointRecords() {
-        PointRecord record1 = PointRecord.builder().id(1L).userId(userId).option(PointRecordOption.USED).build();
-        PointRecord record2 = PointRecord.builder().id(2L).userId(userId).option(PointRecordOption.CHARGED).build();
-        PointRecord record3 = PointRecord.builder().id(3L).userId(2L).option(PointRecordOption.USED).build();
+        PointRecord record1 = PointRecord.builder().userId(userId).option(PointRecordOption.USED).build();
+        PointRecord record2 = PointRecord.builder().userId(userId).option(PointRecordOption.CHARGED).build();
+        PointRecord record3 = PointRecord.builder().userId(2L).option(PointRecordOption.USED).build();
         return pointRecordRepository.saveAll(List.of(record1, record2, record3));
     }
 }

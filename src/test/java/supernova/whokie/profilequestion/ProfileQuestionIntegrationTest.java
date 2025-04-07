@@ -129,7 +129,6 @@ public class ProfileQuestionIntegrationTest {
 
     private Users createUser(int index) {
         Users user = Users.builder()
-            .id(1L)
             .name("Test User " + index)
             .email("test@example.com")
             .point(100)

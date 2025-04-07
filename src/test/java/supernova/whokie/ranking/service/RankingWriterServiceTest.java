@@ -71,7 +71,6 @@ class RankingWriterServiceTest {
 
     private List<Users> createUsers() {
         Users user1 = Users.builder()
-                .id(1L)
                 .name("host")
                 .email("host")
                 .point(1)
@@ -82,7 +81,6 @@ class RankingWriterServiceTest {
                 .role(Role.USER)
                 .build();
         Users user2 = Users.builder()
-                .id(2L)
                 .name("host2")
                 .email("host2")
                 .point(2)
@@ -97,13 +95,11 @@ class RankingWriterServiceTest {
 
     private List<Groups> createGroups() {
         Groups group1 = Groups.builder()
-                .id(2L)
                 .groupName("group1")
                 .description("test")
                 .groupImageUrl("image")
                 .build();
         Groups group2 = Groups.builder()
-                .id(3L)
                 .groupName("group2")
                 .description("test2")
                 .groupImageUrl("image2")
