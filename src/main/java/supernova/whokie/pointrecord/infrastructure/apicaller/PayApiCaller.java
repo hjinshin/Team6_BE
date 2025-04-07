@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import supernova.whokie.global.exception.FileTypeMismatchException;
+import supernova.whokie.global.exception.ForbiddenException;
 import supernova.whokie.global.property.KakaoPayProperties;
 import supernova.whokie.pointrecord.infrastructure.apicaller.dto.PayApproveInfoResponse;
 import supernova.whokie.pointrecord.infrastructure.apicaller.dto.PayReadyInfoResponse;
@@ -37,7 +38,7 @@ public class PayApiCaller {
                     .body(jsonBody)
                     .exchange((request, response) -> {
                         if (response.getStatusCode().is4xxClientError()) {
-                            System.out.println(objectMapper.readValue(response.getBody(), Map.class));
+                            throw new ForbiddenException("카카오페이 권한이 없습니다");
                         }
                         if (response.getStatusCode().isSameCodeAs(HttpStatus.OK)) {
                             return objectMapper.readValue(response.getBody(), PayReadyInfoResponse.class);

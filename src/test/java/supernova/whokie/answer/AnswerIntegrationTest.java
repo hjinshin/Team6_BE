@@ -108,7 +108,6 @@ class AnswerIntegrationTest {
                 String responseContent = result.getResponse().getContentAsString();
                 System.out.println("users 내용: " + responseContent);
             });
-
     }
 
     @Test

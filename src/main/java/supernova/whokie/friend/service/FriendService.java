@@ -32,7 +32,6 @@ public class FriendService {
         // userId로 kakaoAccessToken 조회
         String accessToken = kakaoTokenService.refreshIfAccessTokenExpired(userId);
         List<KakaoDto.Profile> profiles = apiCaller.getKakaoFriends(accessToken).elements();
-//        System.out.println(profiles);
         if (profiles == null) {
             return new ArrayList<>();
         }

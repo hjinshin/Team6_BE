@@ -109,11 +109,7 @@ class QuestionIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.questions").isArray())
-            .andExpect(jsonPath("$.questions.length()").value(5))
-            .andDo(result -> {
-                String responseContent = result.getResponse().getContentAsString();
-                System.out.println("questions 내용: " + responseContent);
-            });
+            .andExpect(jsonPath("$.questions.length()").value(5));
     }
 
     @Test
@@ -128,11 +124,7 @@ class QuestionIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.questions").isArray())
-            .andExpect(jsonPath("$.questions.length()").value(5))
-            .andDo(result -> {
-                String responseContent = result.getResponse().getContentAsString();
-                System.out.println("questions 내용: " + responseContent);
-            });
+            .andExpect(jsonPath("$.questions.length()").value(5));
     }
 
     @Test
@@ -192,11 +184,7 @@ class QuestionIntegrationTest {
             .andExpect(jsonPath("$.content.length()").value(10))
             .andExpect(jsonPath("$.totalElements").value(10))
             .andExpect(jsonPath("$.totalPages").value(1))
-            .andExpect(jsonPath("$.page").value(0))
-            .andDo(result -> {
-                String responseContent = result.getResponse().getContentAsString();
-                System.out.println("APPROVED 상태의 질문 목록: " + responseContent);
-            });
+            .andExpect(jsonPath("$.page").value(0));
     }
 
     @Test
@@ -215,11 +203,7 @@ class QuestionIntegrationTest {
             .andExpect(jsonPath("$.content.length()").value(10))
             .andExpect(jsonPath("$.totalElements").value(10))
             .andExpect(jsonPath("$.totalPages").value(1))
-            .andExpect(jsonPath("$.page").value(0))
-            .andDo(result -> {
-                String responseContent = result.getResponse().getContentAsString();
-                System.out.println("REJECTED 상태의 질문 목록: " + responseContent);
-            });
+            .andExpect(jsonPath("$.page").value(0));
     }
 
     private void createGroupMemberByGroupRole(int index, Groups group, GroupRole leader) {

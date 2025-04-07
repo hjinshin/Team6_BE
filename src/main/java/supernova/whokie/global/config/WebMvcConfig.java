@@ -1,11 +1,11 @@
 package supernova.whokie.global.config;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import supernova.whokie.global.auth.JwtProvider;
@@ -15,8 +15,6 @@ import supernova.whokie.global.interceptor.VisitorInterceptor;
 import supernova.whokie.global.resolver.LoginUserArgumentResolver;
 import supernova.whokie.global.resolver.TempUserArgumentResolver;
 import supernova.whokie.global.resolver.VisitorArgumentResolver;
-
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -60,11 +58,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor())
-                .addPathPatterns("/api/**");
+            .addPathPatterns("/api/**");
         registry.addInterceptor(visitorInterceptor())
-                .addPathPatterns("/api/profile/**");
+            .addPathPatterns("/api/profile/**");
         registry.addInterceptor(adminInterceptor())
-                .addPathPatterns("/admin/**","/api/admin/**");
+            .addPathPatterns("/admin/**", "/api/admin/**");
     }
 
     @Override
@@ -75,14 +73,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                .allowedHeaders("Authorization", "Content-Type")
-                .allowCredentials(true)
-                .exposedHeaders("Authorization")
-                .maxAge(3600);
-    }
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")
+//                .allowedOriginPatterns("*")
+//                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+//                .allowedHeaders("Authorization", "Content-Type")
+//                .allowCredentials(true)
+//                .exposedHeaders("Authorization")
+//                .maxAge(3600);
+//    }
 }
