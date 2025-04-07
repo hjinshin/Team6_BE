@@ -10,6 +10,7 @@ import supernova.whokie.profile.constants.ProfileConstants;
 import supernova.whokie.profile.service.dto.ProfileCommand;
 import supernova.whokie.profile.service.dto.ProfileModel;
 import supernova.whokie.redis.entity.RedisVisitCount;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.service.RedisVisitService;
 import supernova.whokie.s3.event.S3EventDto;
 import supernova.whokie.s3.service.S3Service;
@@ -26,21 +27,25 @@ public class ProfileService {
 
     @Transactional(readOnly = true)
     public ProfileModel.Info getProfile(Long userId, String visitorIp) {
-        Profile profile = profileReaderService.getByUserId(userId);
+        Profile profile = profileReaderService.getProfileWithMemberByUserId(userId);
         String imageUrl = profile.getUsers().getImageUrl();
         if (profile.getUsers().isImageUrlStoredInS3()) {
             imageUrl = s3Service.getSignedUrl(imageUrl);
         }
         String bgImgUrl = s3Service.getSignedUrl(profile.getBackgroundImageUrl());
 
-        RedisVisitCount visitCount = redisVisitService.visitProfile(userId, visitorIp);
+        RedisVisitCount visitCount = redisVisitService.findVisitCountByHostId(userId);
+        RedisDto.Visit event = RedisDto.Visit.toDto(userId, visitorIp);
+        eventPublisher.publishEvent(event);
+
         return ProfileModel.Info.from(profile, visitCount, bgImgUrl, imageUrl);
     }
 
     @Transactional
     public void updateImage(Long userId, MultipartFile imageFile) {
         String key = S3Util.generateS3Key(ProfileConstants.PROFILE_BG_IMAGE_FOLRDER, userId);
-        S3EventDto.Upload event = S3EventDto.Upload.toDto(imageFile, key, ProfileConstants.PROFILE_BG_IMAGE_WIDTH, ProfileConstants.PROFILE_BG_IMAGE_HEIGHT);
+        S3EventDto.Upload event = S3EventDto.Upload.toDto(imageFile, key,
+            ProfileConstants.PROFILE_BG_IMAGE_WIDTH, ProfileConstants.PROFILE_BG_IMAGE_HEIGHT);
         eventPublisher.publishEvent(event);
 
         Profile profile = profileReaderService.getByUserId(userId);

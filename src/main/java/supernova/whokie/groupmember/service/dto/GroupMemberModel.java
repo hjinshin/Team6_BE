@@ -31,18 +31,6 @@ public class GroupMemberModel {
     }
 
     @Builder
-    public record Members(
-        List<Member> members
-    ) {
-
-        public static Members from(List<Member> members) {
-            return Members.builder()
-                .members(members)
-                .build();
-        }
-    }
-
-    @Builder
     public record Option(
         Long groupMemberId,
         Long userId,

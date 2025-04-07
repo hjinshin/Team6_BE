@@ -69,8 +69,7 @@ class AnswerServiceTest {
         Page<Answer> answerPage = new PageImpl<>(List.of(dummyAnswer), PageRequest.of(0, 10), 1);
 
         // when
-        when(userReaderService.getUserById(anyLong())).thenReturn(dummyUser);
-        when(answerReaderService.getAnswerList(any(Pageable.class), eq(dummyUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(answerReaderService.getAnswerList(any(Pageable.class), any(Long.class), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(answerPage);
 
         Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").ascending());
@@ -115,7 +114,7 @@ class AnswerServiceTest {
         when(command.answerId()).thenReturn(answerId);
         when(userReaderService.getUserById(userId)).thenReturn(dummyUser);
         when(answerReaderService.getAnswerById(answerId)).thenReturn(dummyAnswer);
-        when(dummyAnswer.isNotPicked(dummyUser)).thenReturn(false);
+        when(dummyAnswer.isNotPicked(dummyUser.getId())).thenReturn(false);
 
         int decreasedPoint = 100;
         when(dummyUser.decreasePointsByHintCount(dummyAnswer.getHintCount())).thenReturn(decreasedPoint);
@@ -137,8 +136,8 @@ class AnswerServiceTest {
         return Answer.builder()
                 .id(1L)
                 .question(mock(Question.class))
-                .picker(user)
-                .picked(user)
+                .pickerId(user.getId())
+                .pickedId(user.getId())
                 .hintCount(3)
                 .build();
     }

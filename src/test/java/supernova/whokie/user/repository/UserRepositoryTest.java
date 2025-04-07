@@ -75,12 +75,9 @@ class UserRepositoryTest {
     }
 
     private List<Users> createUsers() {
-        Users user1 = Users.builder().id(1L).name("name").email("email2").point(0).birthDate(LocalDate.now())
-            .kakaoId(2L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
-        Users user2 = Users.builder().id(2L).name("name").email("email3").point(0).birthDate(LocalDate.now())
-            .kakaoId(3L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
-        Users user3 = Users.builder().id(3L).name("name").email("email4").point(0).birthDate(LocalDate.now())
-            .kakaoId(4L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
+        Users user1 = Users.builder().name("name").email("email2").point(0).birthDate(LocalDate.now()).kakaoId(2L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
+        Users user2 = Users.builder().name("name").email("email3").point(0).birthDate(LocalDate.now()).kakaoId(3L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
+        Users user3 = Users.builder().name("name").email("email4").point(0).birthDate(LocalDate.now()).kakaoId(4L).gender(Gender.F).imageUrl("sfd").role(Role.USER).build();
         return userRepository.saveAll(List.of(user1, user2, user3));
     }
 }

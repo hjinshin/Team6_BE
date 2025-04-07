@@ -2,9 +2,11 @@ package supernova.whokie.global.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -104,6 +106,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> requireAdditionalDataException(RequireAdditionalDataException e) {
         ProblemDetail problemDetail = setCustomProblemDetail(e);
         return ResponseEntity.status(problemDetail.getStatus()).body(problemDetail);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail> optimisticLockingException() {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "The resource is currently locked due to frequent updates. Please try again later."
+        );
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, "5") // 5초 후 재시도 권장
+                .body(problemDetail);
     }
 
     private ProblemDetail setCustomProblemDetail(CustomException e) {

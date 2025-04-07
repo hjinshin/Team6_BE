@@ -56,4 +56,9 @@ public class UserReaderService {
         return userRepository.findByNameContainingOrEmailContaining(name, email, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Users findUserByIdWithOptimisticLock(Long userId) {
+        return userRepository.findByIdWithOptimisticLock(userId).orElseThrow(
+                () -> new EntityNotFoundException(MessageConstants.USER_NOT_FOUND_MESSAGE));
+    }
 }

@@ -20,6 +20,7 @@ import supernova.whokie.ranking.Ranking;
 import supernova.whokie.ranking.infrastructure.repoistory.RankingRepository;
 import supernova.whokie.ranking.service.RankingWriterService;
 import supernova.whokie.redis.entity.RedisVisitCount;
+import supernova.whokie.redis.event.RedisDto;
 import supernova.whokie.redis.infrastructure.repository.RedisVisitCountRepository;
 import supernova.whokie.user.Gender;
 import supernova.whokie.user.Role;
@@ -94,7 +95,8 @@ public class RaceConditionTest {
             int finalI = i;
             executorService.submit(() -> {
                 try {
-                    redisVisitService.visitProfile(hostId, visitorIp + finalI);
+                    var event = RedisDto.Visit.toDto(hostId, visitorIp + finalI);
+                    redisVisitService.visitProfile(event);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -115,11 +117,11 @@ public class RaceConditionTest {
     }
 
     @Test
-    @DisplayName("동시 질문 지목 횟수 증가 테스트")
+    @DisplayName("랭킹 증가 동시성 테스트")
     void AnswerCountConcurrentlyTest() throws InterruptedException {
         // given
         createRanking(user, group);
-        int threadCount = 100; // 스레드 개수
+        int threadCount = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
@@ -127,7 +129,9 @@ public class RaceConditionTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(user, "test", group);
+                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(
+                        user.getId(), "test", group
+                    );
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -135,17 +139,52 @@ public class RaceConditionTest {
                 }
             });
         }
+
         latch.await();
         executorService.shutdown();
 
         // then
-        Ranking actual = rankingRepository.findByUsersAndQuestionAndGroups(user, "test", group)
-            .orElseThrow();
+        Ranking actual = rankingRepository.findByUserIdAndQuestionAndGroups(
+            user.getId(), "test", group
+        ).orElseThrow();
 
         assertAll(
             () -> assertThat(actual.getCount()).isEqualTo(threadCount)
         );
     }
+
+//    @Test
+//    @DisplayName("동시 질문 지목 횟수 증가 테스트")
+//    void AnswerCountConcurrentlyTest() throws InterruptedException {
+//        // given
+//        createRanking(user, group);
+//        int threadCount = 100; // 스레드 개수
+//        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+//        CountDownLatch latch = new CountDownLatch(threadCount);
+//
+//        // when
+//        for (int i = 0; i < threadCount; i++) {
+//            executorService.submit(() -> {
+//                try {
+//                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(user, "test", group);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    latch.countDown();
+//                }
+//            });
+//        }
+//        latch.await();
+//        executorService.shutdown();
+//
+//        // then
+//        Ranking actual = rankingRepository.findByUserIdAndQuestionAndGroups(user, "test", group)
+//            .orElseThrow();
+//
+//        assertAll(
+//            () -> assertThat(actual.getCount()).isEqualTo(threadCount)
+//        );
+//    }
 
     private RedisVisitCount createVisitCount() {
         RedisVisitCount redisVisitCount = RedisVisitCount.builder()
@@ -187,7 +226,7 @@ public class RaceConditionTest {
         Ranking ranking = Ranking.builder()
             .question("test")
             .count(0)
-            .users(user)
+            .userId(user.getId())
             .groups(group)
             .build();
 
