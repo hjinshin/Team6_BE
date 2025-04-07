@@ -116,6 +116,76 @@ public class RaceConditionTest {
         );
     }
 
+    @Test
+    @DisplayName("랭킹 증가 동시성 테스트")
+    void AnswerCountConcurrentlyTest() throws InterruptedException {
+        // given
+        createRanking(user, group);
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        // when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try {
+                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(
+                        user.getId(), "test", group
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        // then
+        Ranking actual = rankingRepository.findByUserIdAndQuestionAndGroups(
+            user.getId(), "test", group
+        ).orElseThrow();
+
+        assertAll(
+            () -> assertThat(actual.getCount()).isEqualTo(threadCount)
+        );
+    }
+
+//    @Test
+//    @DisplayName("동시 질문 지목 횟수 증가 테스트")
+//    void AnswerCountConcurrentlyTest() throws InterruptedException {
+//        // given
+//        createRanking(user, group);
+//        int threadCount = 100; // 스레드 개수
+//        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+//        CountDownLatch latch = new CountDownLatch(threadCount);
+//
+//        // when
+//        for (int i = 0; i < threadCount; i++) {
+//            executorService.submit(() -> {
+//                try {
+//                    rankingWriterService.increaseRankingCountByUserAndQuestionAndGroups(user, "test", group);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    latch.countDown();
+//                }
+//            });
+//        }
+//        latch.await();
+//        executorService.shutdown();
+//
+//        // then
+//        Ranking actual = rankingRepository.findByUserIdAndQuestionAndGroups(user, "test", group)
+//            .orElseThrow();
+//
+//        assertAll(
+//            () -> assertThat(actual.getCount()).isEqualTo(threadCount)
+//        );
+//    }
+
     private RedisVisitCount createVisitCount() {
         RedisVisitCount redisVisitCount = RedisVisitCount.builder()
             .hostId(1L)
@@ -154,11 +224,11 @@ public class RaceConditionTest {
 
     private void createRanking(Users user, Groups group) {
         Ranking ranking = Ranking.builder()
-                .question("test")
-                .count(0)
-                .userId(user.getId())
-                .groups(group)
-                .build();
+            .question("test")
+            .count(0)
+            .userId(user.getId())
+            .groups(group)
+            .build();
 
         rankingRepository.save(ranking);
     }
