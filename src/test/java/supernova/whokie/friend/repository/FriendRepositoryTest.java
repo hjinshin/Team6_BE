@@ -89,15 +89,15 @@ class FriendRepositoryTest {
     }
 
     private List<Users> createUsers() {
-        Users user1 = Users.builder().id(1L).name("host").email("host").point(1).birthDate(LocalDate.now()).kakaoId(1L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
-        Users user2 = Users.builder().id(2L).name("user1").email("user1").point(1).birthDate(LocalDate.now()).kakaoId(2L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
-        Users user3 = Users.builder().id(3L).name("user2").email("user2").point(1).birthDate(LocalDate.now()).kakaoId(3L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
+        Users user1 = Users.builder().name("host").email("host").point(1).birthDate(LocalDate.now()).kakaoId(1L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
+        Users user2 = Users.builder().name("user1").email("user1").point(1).birthDate(LocalDate.now()).kakaoId(2L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
+        Users user3 = Users.builder().name("user2").email("user2").point(1).birthDate(LocalDate.now()).kakaoId(3L).gender(Gender.F).imageUrl("image").role(Role.USER).build();
         return userRepository.saveAll(List.of(user1, user2, user3));
     }
 
     private List<Friend> createFriends() {
-        Friend friend1 = Friend.builder().id(1L).hostUser(users.get(0)).friendUser(users.get(1)).build();
-        Friend friend2 = Friend.builder().id(2L).hostUser(users.get(1)).friendUser(users.get(2)).build();
+        Friend friend1 = Friend.builder().hostUser(users.get(0)).friendUser(users.get(1)).build();
+        Friend friend2 = Friend.builder().hostUser(users.get(1)).friendUser(users.get(2)).build();
         return friendRepository.saveAll(List.of(friend1, friend2));
     }
 }

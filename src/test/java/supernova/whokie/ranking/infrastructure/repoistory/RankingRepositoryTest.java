@@ -76,7 +76,6 @@ class RankingRepositoryTest {
 
     private List<Users> createUsers() {
         Users user1 = Users.builder()
-            .id(1L)
             .name("host")
             .email("host")
             .point(1)
@@ -87,7 +86,6 @@ class RankingRepositoryTest {
             .role(Role.USER)
             .build();
         Users user2 = Users.builder()
-            .id(2L)
             .name("host2")
             .email("host2")
             .point(2)
@@ -115,15 +113,15 @@ class RankingRepositoryTest {
     }
 
     private List<Ranking> createRankings() {
-        Ranking ranking1 = Ranking.builder().id(1L).question("q1").userId(users.get(0).getId()).count(100)
+        Ranking ranking1 = Ranking.builder().question("q1").userId(users.get(0).getId()).count(100)
                 .groups(groups.get(0)).build();
-        Ranking ranking2 = Ranking.builder().id(2L).question("q2").userId(users.get(0).getId()).count(70)
+        Ranking ranking2 = Ranking.builder().question("q2").userId(users.get(0).getId()).count(70)
                 .groups(groups.get(0)).build();
-        Ranking ranking3 = Ranking.builder().id(3L).question("q3").userId(users.get(0).getId()).count(90)
+        Ranking ranking3 = Ranking.builder().question("q3").userId(users.get(0).getId()).count(90)
                 .groups(groups.get(1)).build();
-        Ranking ranking4 = Ranking.builder().id(4L).question("q4").userId(users.get(1).getId()).count(80)
+        Ranking ranking4 = Ranking.builder().question("q4").userId(users.get(1).getId()).count(80)
                 .groups(groups.get(1)).build();
-        Ranking ranking5 = Ranking.builder().id(5L).question("q5").userId(users.get(0).getId()).count(70)
+        Ranking ranking5 = Ranking.builder().question("q5").userId(users.get(0).getId()).count(70)
                 .groups(groups.get(0)).build();
 
         return rankingRepository.saveAll(List.of(ranking1, ranking2, ranking3, ranking4, ranking5));

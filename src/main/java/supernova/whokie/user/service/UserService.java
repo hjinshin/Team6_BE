@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import supernova.whokie.answer.constants.AnswerConstants;
 import supernova.whokie.global.auth.JwtProvider;
 import supernova.whokie.profile.service.ProfileVisitWriterService;
 import supernova.whokie.profile.service.ProfileWriterService;
@@ -102,5 +103,11 @@ public class UserService {
     public Page<UserModel.Info> searchUsers(String keyword, Pageable pageable) {
         Page<Users> entities = userReaderService.findByNameContainingOrEmailContaining(keyword, keyword, pageable);
         return entities.map(UserModel.Info::from);
+    }
+
+    @Transactional
+    public void increasePoint(Long userId) {
+        Users user = userReaderService.findUserByIdWithOptimisticLock(userId);
+        user.increasePoint(AnswerConstants.ANSWER_POINT);
     }
 }
